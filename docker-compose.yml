@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  nginx:
+    container_name: nginx_service
+    build:
+      context: .
+      dockerfile: nginx.dockerfile
+    ports:
+      - 8080:80
+    volumes:
+      - ./src:/var/www/html
+    depends_on:
+      - mysql
+      - php
+  mysql:
+    container_name: mysql_service
+    image: mariadb:10.5
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_DATABASE: fresh
+      MYSQL_USER: fresh
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: password
+    volumes:
+      - ./mysql:/var/lib/mysql
+  php:
+    container_name: php_service
+    build:
+      context: .
+      dockerfile: php.dockerfile
+    volumes:
+      - ./src:/var/www/html
+  composer:
+    container_name: composer_service
+    build:
+      context: .
+      dockerfile: composer.dockerfile
+    volumes:
+      - ./src:/var/www/html
+    working_dir: /var/www/html
+  npm:
+    image: node:current-alpine
+    volumes:
+      - ./src:/var/www/html
+    entrypoint: ["npm"]
+    working_dir: /var/www/html
+  artisan:
+    build:
+      context: .
+      dockerfile: php.dockerfile
+    volumes:
+      - ./src:/var/www/html
+    working_dir: /var/www/html
+    depends_on:
+      - mysql
+    entrypoint: ["php", "/var/www/html/artisan"]
